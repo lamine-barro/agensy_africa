@@ -10,9 +10,11 @@ const { Pool } = pg; const pool = new Pool({ connectionString: process.env.DATAB
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const productDir = path.resolve(__dirname, '../seed-data/products');
 const brandingDir = path.resolve(__dirname, '../seed-data/branding');
+const retiredProductIds = ['plantain', 'yam', 'fresh-cassava', 'sweet-potato', 'fresh-chili', 'fresh-ginger', 'fresh-pineapple', 'fresh-mango'];
 
 try {
   await pool.query('BEGIN');
+  await pool.query('DELETE FROM products WHERE id = ANY($1::text[])', [retiredProductIds]);
   for (const product of products) {
     const filename = product.image.replace('/assets/', ''); const image = await fs.readFile(path.join(productDir, filename));
     await pool.query(`INSERT INTO products (id,name,unit_label,unit_content,unit,min_quantity,max_quantity,origin,regulation,monthly_price_guaranteed,active)
