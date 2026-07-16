@@ -201,6 +201,10 @@ Cette estimation est soumise à la validation d’un opérateur Agensy dans le b
 
 ## 9. Validation humaine et paiement
 
+### Phase actuelle : facture manuelle
+
+Tant que l'intégration DGI/FNE n'est pas homologuée, la facture est générée manuellement par l'équipe Agensy après confirmation du paiement. Le back-office enregistre son numéro et, si disponible, son lien PDF, puis ouvre WhatsApp avec un message prérempli vers le client. Le partage est tracé avec les statuts `à émettre manuellement`, `émise manuellement` et `partagée sur WhatsApp`. Aucune facture ne doit être présentée comme certifiée FNE pendant cette phase.
+
 Après envoi, la commande est en attente de validation par un opérateur Agensy. L’application affiche un compte à rebours de 24 heures.
 
 - Si la commande est acceptée, le client est informé dans l’application, par notification push et via WhatsApp.

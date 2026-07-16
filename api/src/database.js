@@ -68,11 +68,13 @@ export const db = {
   },
   async invoices(customerId) {
     if (!pool) return memory.invoices.filter((i) => !customerId || i.customerId === customerId);
-    const { rows } = await pool.query('SELECT id, order_id AS "orderId", customer_id AS "customerId", amount, currency, status, created_at AS "createdAt" FROM invoices WHERE customer_id=$1 ORDER BY created_at DESC', [customerId]); return rows;
+    const { rows } = await pool.query('SELECT id, order_id AS "orderId", customer_id AS "customerId", amount, currency, status, invoice_number AS "invoiceNumber", pdf_url AS "pdfUrl", issued_at AS "issuedAt", whatsapp_shared_at AS "whatsAppSharedAt", created_at AS "createdAt" FROM invoices WHERE customer_id=$1 ORDER BY created_at DESC', [customerId]); return rows;
   },
   async createInvoice(invoice) {
     if (!pool) { memory.invoices.unshift(invoice); return invoice; }
     await pool.query('INSERT INTO invoices (id,order_id,customer_id,amount,currency,status,created_at) VALUES ($1,$2,$3,$4,$5,$6,$7)', [invoice.id, invoice.orderId, invoice.customerId, invoice.amount, invoice.currency, invoice.status, invoice.createdAt]); return invoice;
   },
+  async invoice(invoiceId) { if (!pool) return memory.invoices.find((invoice) => invoice.id === invoiceId); const { rows } = await pool.query('SELECT id, order_id AS "orderId", customer_id AS "customerId", amount, currency, status, invoice_number AS "invoiceNumber", pdf_url AS "pdfUrl", issued_at AS "issuedAt", whatsapp_shared_at AS "whatsAppSharedAt", created_at AS "createdAt" FROM invoices WHERE id=$1', [invoiceId]); return rows[0]; },
+  async updateInvoice(invoice) { if (!pool) { const i = memory.invoices.findIndex((item) => item.id === invoice.id); memory.invoices[i] = invoice; return invoice; } const { rows } = await pool.query('UPDATE invoices SET status=$2, invoice_number=$3, pdf_url=$4, issued_at=$5, whatsapp_shared_at=$6 WHERE id=$1 RETURNING id, order_id AS "orderId", customer_id AS "customerId", amount, currency, status, invoice_number AS "invoiceNumber", pdf_url AS "pdfUrl", issued_at AS "issuedAt", whatsapp_shared_at AS "whatsAppSharedAt", created_at AS "createdAt"', [invoice.id, invoice.status, invoice.invoiceNumber || null, invoice.pdfUrl || null, invoice.issuedAt || null, invoice.whatsAppSharedAt || null]); return rows[0]; },
   id
 };
