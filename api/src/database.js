@@ -13,6 +13,7 @@ export const db = {
   async product(idValue) { if (!pool) return null; const { rows } = await pool.query(`SELECT p.*, pv.unit_price, pi.filename FROM products p JOIN product_price_versions pv ON pv.product_id=p.id AND pv.effective_until IS NULL LEFT JOIN product_images pi ON pi.product_id=p.id WHERE p.id=$1 AND p.active=true`, [idValue]); return normalizeProduct(rows[0]); },
   async productImage(filename) { if (!pool) return null; const { rows } = await pool.query('SELECT content_type, image_data FROM product_images WHERE filename=$1 LIMIT 1', [filename]); return rows[0]; },
   async brandAsset(key) { if (!pool) return null; const { rows } = await pool.query('SELECT content_type, asset_data FROM brand_assets WHERE key=$1', [key]); return rows[0]; },
+  async configuration() { if (!pool) return null; const { rows } = await pool.query("SELECT value FROM app_configuration WHERE key='public'"); return rows[0]?.value || null; },
   async customer(idValue) {
     if (!pool) return memory.customers.get(idValue);
     const { rows } = await pool.query('SELECT id, phone, role, profile, profile_completed FROM customers WHERE id = $1', [idValue]);

@@ -26,5 +26,7 @@ try {
   await pool.query(`INSERT INTO brand_assets (key,content_type,asset_data) VALUES ('logo','image/png',$1)
     ON CONFLICT (key) DO UPDATE SET content_type=EXCLUDED.content_type,asset_data=EXCLUDED.asset_data,updated_at=now()`, [logo]);
   await pool.query("DELETE FROM brand_assets WHERE key='favicon'");
+  const configuration = { branding: { name: 'Agensy Africa', colors: { primary: '#123f32', accent: '#d76531', leaf: '#58a521' } }, commerce: { currency: 'XOF', serviceFee: 2000, businessTypes: ['Boutique', 'Restaurant / maquis', 'Hôtel', 'Cantine', 'Revendeur'], scheduleTypes: ['asap', 'scheduled', 'recurring'], recurringFrequencies: ['weekly', 'monthly'], statuses: ['draft', 'submitted', 'adjusted', 'accepted', 'paid', 'delivered', 'cancelled'], transitions: { draft: ['submitted', 'cancelled'], submitted: ['adjusted', 'accepted', 'cancelled'], adjusted: ['accepted', 'cancelled'], accepted: ['paid', 'cancelled'], paid: ['delivered'], delivered: [], cancelled: [] }, delivery: { validationHours: 24, defaultFee: 0 } } };
+  await pool.query(`INSERT INTO app_configuration (key,value) VALUES ('public',$1) ON CONFLICT (key) DO UPDATE SET value=EXCLUDED.value,updated_at=now()`, [configuration]);
   await pool.query('COMMIT'); console.log(`Seeded ${products.length} products and ${products.length} product-image records.`);
 } catch (error) { await pool.query('ROLLBACK'); throw error; } finally { await pool.end(); }
