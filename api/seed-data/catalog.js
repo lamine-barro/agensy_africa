@@ -13,7 +13,7 @@ export const products = [
   ['dried-coconut', 'Coco sec', 'sac de 25 kg', 25, 'kg', 1, 20, 800, 'dried-coconut-v1.webp'],
   ['dried-mango', 'Mangue séchée', 'carton de 5 kg', 5, 'kg', 1, 20, 5000, 'dried-mango-v1.webp'],
   ['dried-pineapple', 'Ananas séché', 'carton de 5 kg', 5, 'kg', 1, 20, 6000, 'dried-pineapple-v1.webp'],
-  ['dried-banana', 'Banane séchée', 'carton de 5 kg', 5, 'kg', 1, 20, 4500, 'plantain-v1.webp'],
+  ['chili-powder', 'Poudre de piment', 'sac de 5 kg', 5, 'kg', 1, 20, 3500, 'chili-powder-v1.webp'],
   ['dried-hibiscus', 'Bissap / hibiscus séché', 'sac de 25 kg', 25, 'kg', 1, 10, 2500, 'dried-hibiscus-v1.webp'],
   ['dried-ginger', 'Gingembre séché', 'sac de 25 kg', 25, 'kg', 1, 10, 3500, 'dried-ginger-v1.webp'],
   ['cashew-nuts', 'Noix de cajou brutes', 'sac de 25 kg', 25, 'kg', 1, 10, 400, 'cashew-nuts-v1.webp'],

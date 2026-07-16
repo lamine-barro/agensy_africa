@@ -10,7 +10,7 @@ const { Pool } = pg; const pool = new Pool({ connectionString: process.env.DATAB
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const productDir = path.resolve(__dirname, '../seed-data/products');
 const brandingDir = path.resolve(__dirname, '../seed-data/branding');
-const retiredProductIds = ['plantain', 'yam', 'fresh-cassava', 'sweet-potato', 'fresh-chili', 'fresh-ginger', 'fresh-pineapple', 'fresh-mango'];
+const retiredProductIds = ['plantain', 'yam', 'fresh-cassava', 'sweet-potato', 'fresh-chili', 'fresh-ginger', 'fresh-pineapple', 'fresh-mango', 'dried-banana'];
 
 try {
   await pool.query('BEGIN');
