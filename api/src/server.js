@@ -27,9 +27,16 @@ app.use(express.static(path.resolve(__dirname, '../../web/dist'), { index: 'inde
 const calculate = (product, quantity, deliveryFee = 0, serviceFee = 2000) => { const productSubtotal = product.unitPrice * product.unitContent * quantity; return { productSubtotal, deliveryFee, serviceFee, taxes: 0, total: productSubtotal + deliveryFee + serviceFee }; };
 const normalizeSchedule = (schedule = {}, commerce) => {
   if (!commerce.scheduleTypes.includes(schedule.type)) return null;
-  if (schedule.type === 'scheduled') { const raw = String(schedule.date || ''); const iso = /^\d{4}-\d{2}-\d{2}$/.test(raw) ? raw : (() => { const m = raw.match(/^(\d{2})\/(\d{2})\/(\d{4})$/); return m ? `${m[3]}-${m[2]}-${m[1]}` : null; })(); if (!iso || Number.isNaN(Date.parse(`${iso}T00:00:00Z`))) return null; return { ...schedule, date: iso }; }
+  if (schedule.type === 'scheduled') { const raw = String(schedule.date || ''); const iso = /^\d{4}-\d{2}-\d{2}$/.test(raw) ? raw : (() => { const m = raw.match(/^(\d{2})\/(\d{2})\/(\d{4})$/); return m ? `${m[3]}-${m[2]}-${m[1]}` : null; })(); const parsed = iso && new Date(`${iso}T00:00:00Z`); if (!iso || Number.isNaN(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== iso) return null; return { ...schedule, date: iso }; }
   if (schedule.type === 'recurring' && !commerce.recurringFrequencies.includes(schedule.frequency)) return null;
   return schedule;
+};
+const nonEmpty = (value) => typeof value === 'string' && value.trim().length > 0;
+const validCoordinates = (value) => !value || (Number.isFinite(value.latitude) && Number.isFinite(value.longitude) && Math.abs(value.latitude) <= 90 && Math.abs(value.longitude) <= 180);
+const validProfile = (profile, commerce) => {
+  if (!nonEmpty(profile.businessName) || !nonEmpty(profile.managerName) || !nonEmpty(profile.managerRole) || !nonEmpty(profile.city) || !nonEmpty(profile.deliveryAddress)) return false;
+  if (!commerce.businessTypes.includes(profile.businessType) || !commerce.legalStatuses.includes(profile.legalStatus) || !commerce.countries.includes(profile.country) || !validCoordinates(profile.mapLocation)) return false;
+  return profile.country === 'CI' ? nonEmpty(profile.ncc) : nonEmpty(profile.internationalId) && nonEmpty(profile.billingCountry);
 };
 const isProduction = process.env.NODE_ENV === 'production';
 const auth = (req, res, next) => { const payload = verifyToken(req.headers.authorization?.replace(/^Bearer\s+/i, '')); if (!payload) return res.status(401).json({ error: 'UNAUTHENTICATED' }); req.user = payload; next(); };
@@ -69,7 +76,7 @@ app.post('/v1/admin/auth/login', createRateLimiter({ windowMs: 10 * 60_000, limi
 
 app.put('/v1/customers/:id/profile', auth, async (req, res, next) => { try {
   if (req.user.sub !== req.params.id && !['operator', 'admin'].includes(req.user.role)) return res.status(403).json({ error: 'FORBIDDEN' });
-  const profile = req.body || {}; if (!profile.businessName || !profile.managerName || !profile.businessType || !profile.country) return res.status(422).json({ error: 'INCOMPLETE_PROFILE' }); if (profile.country === 'CI' && !profile.ncc) return res.status(422).json({ error: 'NCC_REQUIRED_FOR_CI' });
+  const profile = req.body || {}; const config = await db.configuration(); if (!config?.commerce || !validProfile(profile, config.commerce)) return res.status(422).json({ error: 'INCOMPLETE_PROFILE' });
   const existing = await db.customer(req.params.id); if (!existing) return res.status(404).json({ error: 'CUSTOMER_NOT_FOUND' });
   res.json(await db.upsertCustomer({ ...existing, ...profile, profileCompleted: true }));
 } catch (error) { next(error); } });
@@ -92,4 +99,6 @@ app.post('/v1/orders/:id/cancel', auth, async (req, res, next) => { try { const 
 app.get('/v1/invoices', auth, async (req, res, next) => { try { const customerId = ['operator', 'admin'].includes(req.user.role) ? req.query.customerId : req.user.sub; res.json(await db.invoices(customerId)); } catch (error) { next(error); } });
 app.get('/v1/notifications', auth, async (req, res, next) => { try { const customerId = ['operator', 'admin'].includes(req.user.role) ? req.query.customerId : req.user.sub; res.json(await db.notifications(customerId)); } catch (error) { next(error); } });
 app.use((error, _req, res, _next) => { console.error(error); res.status(error.message === 'Origin not allowed' ? 403 : 500).json({ error: error.message === 'Origin not allowed' ? 'ORIGIN_NOT_ALLOWED' : 'INTERNAL_ERROR' }); });
-app.listen(PORT, () => console.log(`Agensy API listening on :${PORT}`));
+export { app };
+
+if (process.env.NODE_ENV !== 'test') app.listen(PORT, () => console.log(`Agensy API listening on :${PORT}`));

@@ -2,28 +2,30 @@
 
 ```text
 Application Expo ──────┐
-                        ├── API Express ── Catalogue / Commandes / Notifications
+                        ├── API Express ── PostgreSQL ou mémoire en développement
 Back-office React ─────┘         │
-                                  ├── Jeko : lien de paiement
-                                  ├── DGI FNE : certification de facture
-                                  └── WhatsApp : information client
+                                  ├── Jeko : lien de paiement et webhook signé
+                                  ├── WhatsApp : OTP et notifications configurables
+                                  └── FNE : adaptateur présent, non raccordé au flux de facture actuel
 ```
 
-## Cycle de commande
+## Composants
 
-`brouillon → envoyée → acceptée → payée → livrée`
+- `mobile/` : application Expo iOS/Android, localisation et i18n FR/EN.
+- `web/` : back-office React destiné aux opérateurs.
+- `api/` : API Express, autorisation par jeton signé et règles de commande.
+- `api/src/database.js` : persistance PostgreSQL lorsque `DATABASE_URL` est défini ; mémoire en développement sinon.
+- `api/src/integrations.js` : adaptateurs Jeko, WhatsApp et FNE.
 
-L'opérateur peut modifier le transport et la date avant l'acceptation. Une commande non payée peut être annulée. Chaque transition doit générer une notification in-app, push et WhatsApp; le premier canal est déjà persisté par l'API, les deux autres passent par les adaptateurs.
+## Flux de commande
 
-## Règles centrales
+`draft → submitted → adjusted? → accepted → paid → delivered`
 
-- Une commande porte sur un seul produit.
-- `sous-total = prix/kg ou L × contenu de l'unité × quantité`.
-- Les 2 000 FCFA de frais de service sont distincts de la livraison et des taxes.
-- La quantité est bornée par chaque produit.
-- Le NCC est obligatoire pour un commerce établi en Côte d'Ivoire; il doit ensuite être vérifié par un service métier avant émission réelle de FNE.
-- Le prix est figé lors de l'envoi de la commande. Pour la persistance de production, enregistrer un instantané immuable du produit et de la grille tarifaire dans l'item de commande.
+Le client crée et soumet une commande. L'opérateur peut l'ajuster ou l'accepter. L'acceptation crée un lien Jeko. Le webhook Jeko valide le paiement, crée une facture manuelle en attente et notifie le client. L'opérateur émet ensuite la facture et peut préparer son partage WhatsApp.
 
-## À remplacer avant production
+## Limites importantes
 
-Le `store.js` en mémoire est intentionnellement une base de démonstration. Le remplacer par PostgreSQL (transactions pour changement d'état), un stockage objet privé pour les PDF FNE, une file de tâches pour les webhooks et un fournisseur de push. Les secrets ne doivent jamais atteindre le web ou l'application mobile.
+- Le lien Jeko est actuellement construit par l'adaptateur ; la confirmation de paiement dépend du webhook signé.
+- Les notifications sont persistées dans l'application ; WhatsApp dépend de `WHATSAPP_WEBHOOK_URL` et les push ne sont pas implémentées.
+- L'adaptateur FNE est un point d'extension. Il n'est pas appelé par le flux de facture manuel.
+- Les secrets, jetons et URL de prestataires restent exclusivement côté serveur, sauf le jeton Mapbox public destiné au mobile.
