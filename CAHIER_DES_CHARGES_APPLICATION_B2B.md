@@ -69,6 +69,24 @@ Pour un commerce établi en Côte d’Ivoire, le numéro de compte contribuable 
 
 Une page de bienvenue présente les bénéfices Agensy : approvisionnement fiable, produits de qualité, prix garantis mensuellement, livraison intégrée, suivi des commandes, paiements et facturation.
 
+### 4.4 Parcours de référence mobile (normatif)
+
+Le parcours ci-dessous remplace toute description contradictoire des formulaires d'inscription. Il doit rester séquentiel, court et reprendre l'utilisateur là où il s'est arrêté.
+
+| Étape | Objectif | Champs et interactions | Règle de validation |
+|---|---|---|---|
+| 1. Bienvenue | Expliquer la valeur avant de demander une donnée | Trois bénéfices, actions `Commencer` et `J'ai déjà un compte` | Aucune donnée requise |
+| 2. WhatsApp | Identifier le titulaire du compte | Indicatif pays séparé (`+225` par défaut) et numéro local ; le numéro complet est affiché/traité au format international | Numéro international valide |
+| 3. OTP | Prouver la possession du numéro | Code à **4 chiffres**, quatre champs séparés, passage automatique à la case suivante et collage pris en charge | Les 4 chiffres sont obligatoires ; expiration 5 minutes |
+| 4. Commerce | Qualifier le client B2B | Nom du commerce, type de commerce sous forme de choix, statut formel/informel | Les trois champs sont obligatoires |
+| 5. Responsable | Identifier le contact opérationnel | Nom complet, fonction, e-mail professionnel facultatif ; le WhatsApp vérifié devient le canal de notification | Nom et fonction obligatoires |
+| 6. Livraison | Créer l'adresse habituelle sans friction | Zone Côte d'Ivoire/international, ville, adresse/quartier, repère facultatif ; recherche et suggestions Mapbox, avec saisie manuelle toujours possible | Zone, ville et adresse obligatoires |
+| 7. Facturation | Collecter le minimum fiscal adapté | NCC pour la Côte d'Ivoire ; identifiant fiscal/registre et pays de facturation pour l'international | Le champ fiscal adapté à la zone est obligatoire |
+
+L'assistant affiche une progression de quatre étapes métier : **Commerce → Responsable → Livraison → Facturation**. Chaque écran ne présente que les champs utiles à cette étape, possède un bouton Retour à partir de la deuxième étape et empêche le passage suivant tant que les champs obligatoires ne sont pas complets.
+
+Les coordonnées Mapbox servent uniquement à suggérer et normaliser une adresse. L'utilisateur garde toujours la maîtrise de l'adresse enregistrée, peut la corriger manuellement, et un repère libre est prévu pour les livreurs. La latitude/longitude sélectionnée peut être stockée avec l'adresse, mais ne remplace jamais son libellé lisible.
+
 ## 5. Accueil
 
 L’écran principal comprend :
@@ -157,6 +175,8 @@ Pour chaque commande, il peut :
 - modifier la géolocalisation de livraison, indépendamment de celle enregistrée dans son profil ;
 - ajouter des instructions particulières ;
 - envoyer la commande pour validation.
+
+Pour une commande planifiée, la date souhaitée est obligatoire. Pour une commande récurrente, le client choisit explicitement une fréquence hebdomadaire ou mensuelle. Ces paramètres sont affichés dans le récapitulatif avant l'envoi.
 
 
 
