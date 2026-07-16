@@ -65,9 +65,9 @@ Après validation du numéro, l’utilisateur complète son profil professionnel
 
 Pour un commerce établi en Côte d’Ivoire, le numéro de compte contribuable (NCC) doit être collecté et vérifié avant l’émission d’une facture B2B. Pour un client international, les informations d’identification et de contact exigées par la FNE sont collectées en lieu et place du NCC.
 
-### 4.3 Écran de bienvenue
+### 4.3 Écran de bienvenue après création du compte
 
-Une page de bienvenue présente les bénéfices Agensy : approvisionnement fiable, produits de qualité, prix garantis mensuellement, livraison intégrée, suivi des commandes, paiements et facturation.
+L'écran de bienvenue intervient **après** la validation complète du profil professionnel, et non avant la connexion. Il confirme que le compte est prêt, rappelle les bénéfices Agensy (approvisionnement fiable, prix garantis, livraison suivie et facturation B2B) puis propose deux actions : `Découvrir le catalogue` ou `Aller à mon accueil`.
 
 ### 4.4 Parcours de référence mobile (normatif)
 
@@ -75,13 +75,13 @@ Le parcours ci-dessous remplace toute description contradictoire des formulaires
 
 | Étape | Objectif | Champs et interactions | Règle de validation |
 |---|---|---|---|
-| 1. Bienvenue | Expliquer la valeur avant de demander une donnée | Trois bénéfices, actions `Commencer` et `J'ai déjà un compte` | Aucune donnée requise |
-| 2. WhatsApp | Identifier le titulaire du compte | Indicatif pays séparé (`+225` par défaut) et numéro local ; le numéro complet est affiché/traité au format international | Numéro international valide |
-| 3. OTP | Prouver la possession du numéro | Code à **4 chiffres**, quatre champs séparés, passage automatique à la case suivante et collage pris en charge | Les 4 chiffres sont obligatoires ; expiration 5 minutes |
-| 4. Commerce | Qualifier le client B2B | Nom du commerce, type de commerce sous forme de choix, statut formel/informel | Les trois champs sont obligatoires |
-| 5. Responsable | Identifier le contact opérationnel | Nom complet, fonction, e-mail professionnel facultatif ; le WhatsApp vérifié devient le canal de notification | Nom et fonction obligatoires |
-| 6. Livraison | Créer l'adresse habituelle sans friction | Zone Côte d'Ivoire/international, ville, adresse/quartier, repère facultatif ; recherche et suggestions Mapbox, avec saisie manuelle toujours possible | Zone, ville et adresse obligatoires |
-| 7. Facturation | Collecter le minimum fiscal adapté | NCC pour la Côte d'Ivoire ; identifiant fiscal/registre et pays de facturation pour l'international | Le champ fiscal adapté à la zone est obligatoire |
+| 1. WhatsApp | Identifier le titulaire du compte | Indicatif pays séparé (`+225` par défaut) et numéro local ; le numéro complet est traité au format international | Numéro international valide |
+| 2. OTP | Prouver la possession du numéro | Code à **4 chiffres**, quatre champs séparés, passage automatique à la case suivante et collage pris en charge | Les 4 chiffres sont obligatoires ; expiration 5 minutes |
+| 3. Commerce | Qualifier le client B2B | Nom du commerce, type de commerce sous forme de choix, statut formel/informel | Les trois champs sont obligatoires |
+| 4. Responsable | Identifier le contact opérationnel | Nom complet, fonction, e-mail professionnel facultatif ; le WhatsApp vérifié devient le canal de notification | Nom et fonction obligatoires |
+| 5. Livraison | Créer l'adresse habituelle sans friction | Zone Côte d'Ivoire/international, ville, adresse/quartier, repère facultatif ; recherche et suggestions Mapbox, bouton de géolocalisation et saisie manuelle | Zone, ville et adresse obligatoires |
+| 6. Facturation | Collecter le minimum fiscal adapté | NCC pour la Côte d'Ivoire ; identifiant fiscal/registre et pays de facturation pour l'international | Le champ fiscal adapté à la zone est obligatoire |
+| 7. Bienvenue | Confirmer que le compte est opérationnel | Bénéfices récapitulés, accès catalogue ou accueil | Profil professionnel validé |
 
 L'assistant affiche une progression de quatre étapes métier : **Commerce → Responsable → Livraison → Facturation**. Chaque écran ne présente que les champs utiles à cette étape, possède un bouton Retour à partir de la deuxième étape et empêche le passage suivant tant que les champs obligatoires ne sont pas complets.
 
