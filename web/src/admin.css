@@ -18,3 +18,23 @@
 
 .sidebar nav button.active { background: #28604c; color: #fff; }
 .sidebar nav button:focus-visible { outline: 3px solid #d9a287; outline-offset: 3px; }
+
+/* Les panneaux suivants sont les anciens aperçus du tableau de bord. */
+.dashboard > section.panel:nth-of-type(n + 2) { display: none; }
+
+.catalogProduct {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 220px;
+}
+
+.catalogProduct img {
+  width: 58px;
+  height: 58px;
+  flex: 0 0 58px;
+  border-radius: 12px;
+  border: 1px solid #d8e4da;
+  object-fit: cover;
+  background: #eef5ef;
+}
