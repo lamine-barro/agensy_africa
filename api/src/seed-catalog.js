@@ -8,6 +8,7 @@ if (!process.env.DATABASE_URL) throw new Error('DATABASE_URL is required to seed
 const { Pool } = pg; const pool = new Pool({ connectionString: process.env.DATABASE_URL, ssl: process.env.DATABASE_SSL === 'true' ? { rejectUnauthorized: process.env.DATABASE_SSL_REJECT_UNAUTHORIZED !== 'false' } : false });
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const productDir = path.resolve(__dirname, '../seed-data/products');
+const brandingDir = path.resolve(__dirname, '../seed-data/branding');
 
 try {
   await pool.query('BEGIN');
@@ -21,5 +22,9 @@ try {
     await pool.query(`INSERT INTO product_images (product_id,filename,content_type,image_data)
       VALUES ($1,$2,'image/webp',$3) ON CONFLICT (product_id) DO UPDATE SET filename=EXCLUDED.filename,content_type=EXCLUDED.content_type,image_data=EXCLUDED.image_data,updated_at=now()`, [product.id, filename, image]);
   }
+  const logo = await fs.readFile(path.join(brandingDir, 'logo_agensy_africa.png'));
+  await pool.query(`INSERT INTO brand_assets (key,content_type,asset_data) VALUES ('logo','image/png',$1)
+    ON CONFLICT (key) DO UPDATE SET content_type=EXCLUDED.content_type,asset_data=EXCLUDED.asset_data,updated_at=now()`, [logo]);
+  await pool.query("DELETE FROM brand_assets WHERE key='favicon'");
   await pool.query('COMMIT'); console.log(`Seeded ${products.length} products and ${products.length} product-image records.`);
 } catch (error) { await pool.query('ROLLBACK'); throw error; } finally { await pool.end(); }

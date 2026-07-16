@@ -5,6 +5,7 @@ import * as Location from 'expo-location';
 import { formatMoney, translate } from './src/i18n';
 
 const API = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:4000';
+const BRAND_LOGO = `${API}/assets/branding/logo`;
 const MAPBOX_ACCESS_TOKEN = process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN || '';
 const statuses = ['draft', 'submitted', 'accepted', 'paid', 'delivered', 'cancelled'];
 const statusLabels = { draft: 'Brouillon', submitted: 'Envoyée', accepted: 'Acceptée', paid: 'Payée', delivered: 'Livrée', cancelled: 'Annulée' };
@@ -47,7 +48,7 @@ function OtpStep({ t, code, setCode, onVerify }) {
 
 function AccountWelcome({ profile, locale, onCatalog, onHome }) {
   const fr = locale === 'fr';
-  return <View><Text style={s.brand}>AGENSY AFRICA</Text><View style={s.orb}/><Text style={s.welcomeTitle}>{fr ? `Bienvenue, ${profile.businessName || 'partenaire'} !` : `Welcome, ${profile.businessName || 'partner'}!`}</Text><Text style={s.welcomeText}>{fr ? 'Votre compte professionnel est prêt. Vous pouvez maintenant consulter le catalogue, préparer votre première commande et suivre vos livraisons.' : 'Your business account is ready. You can now browse the catalogue, prepare your first order and track deliveries.'}</Text><View style={s.benefit}><Text>✓ {fr ? 'Adresse de livraison enregistrée' : 'Delivery address saved'}</Text><Text>✓ {fr ? 'Notifications WhatsApp activées' : 'WhatsApp notifications enabled'}</Text><Text>✓ {fr ? 'Facturation B2B préparée' : 'B2B invoicing prepared'}</Text></View><Button label={fr ? 'Découvrir le catalogue' : 'Browse catalogue'} onPress={onCatalog}/><Button label={fr ? 'Aller à mon accueil' : 'Go to my home'} secondary onPress={onHome}/></View>;
+  return <View><Image source={{ uri: BRAND_LOGO }} style={{ width: 92, height: 92, borderRadius: 20, marginBottom: 20 }}/><Text style={s.brand}>AGENSY AFRICA</Text><Text style={s.welcomeTitle}>{fr ? `Bienvenue, ${profile.businessName || 'partenaire'} !` : `Welcome, ${profile.businessName || 'partner'}!`}</Text><Text style={s.welcomeText}>{fr ? 'Votre compte professionnel est prêt. Vous pouvez maintenant consulter le catalogue, préparer votre première commande et suivre vos livraisons.' : 'Your business account is ready. You can now browse the catalogue, prepare your first order and track deliveries.'}</Text><View style={s.benefit}><Text>✓ {fr ? 'Adresse de livraison enregistrée' : 'Delivery address saved'}</Text><Text>✓ {fr ? 'Notifications WhatsApp activées' : 'WhatsApp notifications enabled'}</Text><Text>✓ {fr ? 'Facturation B2B préparée' : 'B2B invoicing prepared'}</Text></View><Button label={fr ? 'Découvrir le catalogue' : 'Browse catalogue'} onPress={onCatalog}/><Button label={fr ? 'Aller à mon accueil' : 'Go to my home'} secondary onPress={onHome}/></View>;
 }
 
 function ProfileWizard({ profile, setProfile, step, setStep, onSave, locale, onLocate, locating }) {

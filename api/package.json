@@ -6,7 +6,7 @@
     "dev": "node --env-file-if-exists=.env --watch src/server.js",
     "start": "node --env-file-if-exists=.env src/server.js",
     "test": "node --test",
-    "migrate": "psql \"$DATABASE_URL\" -f migrations/001_initial.sql && psql \"$DATABASE_URL\" -f migrations/002_catalog_and_order_workflow.sql && psql \"$DATABASE_URL\" -f migrations/003_manual_invoice_workflow.sql",
+    "migrate": "psql \"$DATABASE_URL\" -f migrations/001_initial.sql && psql \"$DATABASE_URL\" -f migrations/002_catalog_and_order_workflow.sql && psql \"$DATABASE_URL\" -f migrations/003_manual_invoice_workflow.sql && psql \"$DATABASE_URL\" -f migrations/004_brand_assets.sql",
     "seed:catalog": "node --env-file-if-exists=.env src/seed-catalog.js"
   },
   "dependencies": {

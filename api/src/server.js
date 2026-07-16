@@ -19,6 +19,8 @@ app.use(cors({ origin(origin, callback) { if (!origin || allowedOrigins.includes
 app.use(express.json({ limit: '100kb', verify: (req, _res, buffer) => { req.rawBody = buffer.toString('utf8'); } }));
 app.use(createRateLimiter());
 app.get('/assets/:filename', async (req, res, next) => { try { const image = await db.productImage(req.params.filename); if (!image) return next(); res.type(image.content_type).send(image.image_data); } catch (error) { next(error); } });
+app.get('/assets/branding/:key', async (req, res, next) => { try { const asset = await db.brandAsset(req.params.key); if (!asset) return next(); res.type(asset.content_type).send(asset.asset_data); } catch (error) { next(error); } });
+app.get('/v1/branding', (_req, res) => res.json({ logoUrl: '/assets/branding/logo', faviconUrl: '/assets/branding/logo', colors: { primary: '#123f32', accent: '#d76531', leaf: '#58a521' } }));
 app.use(express.static(path.resolve(__dirname, '../../web/dist'), { index: 'index.html', maxAge: '1h', etag: true }));
 
 const calculate = (product, quantity, deliveryFee = 0) => { const productSubtotal = product.unitPrice * product.unitContent * quantity; return { productSubtotal, deliveryFee, serviceFee: 2000, taxes: 0, total: productSubtotal + deliveryFee + 2000 }; };
