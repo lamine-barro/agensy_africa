@@ -44,7 +44,7 @@ test('mobile profile, order, payment, invoice and delivery flow is coherent', as
 
   const catalog = await request('/v1/products');
   assert.equal(catalog.response.status, 200);
-  assert.equal(catalog.body.length, 20);
+  assert.equal(catalog.body.length, 19);
   const product = catalog.body[0];
 
   const invalidSchedule = await request('/v1/orders', { token: customerToken, method: 'POST', body: JSON.stringify({ productId: product.id, quantity: product.minQuantity, deliveryAddress: { label: 'Cocody' }, schedule: { type: 'scheduled', date: '31/02/2026' } }) });
@@ -88,6 +88,13 @@ test('mobile profile, order, payment, invoice and delivery flow is coherent', as
   const delivered = await request(`/v1/admin/orders/${created.body.id}/deliver`, { token: adminToken, method: 'POST' });
   assert.equal(delivered.response.status, 200);
   assert.equal(delivered.body.status, 'delivered');
+
+  const rating = await request(`/v1/orders/${created.body.id}/rating`, { token: customerToken, method: 'POST', body: JSON.stringify({ score: 5, comment: 'Livraison conforme.' }) });
+  assert.equal(rating.response.status, 201);
+  assert.equal(rating.body.score, 5);
+  const ratings = await request('/v1/ratings', { token: customerToken });
+  assert.equal(ratings.response.status, 200);
+  assert.equal(ratings.body[0].orderId, created.body.id);
 
   const mobileSource = await fs.readFile(new URL('../../mobile/App.js', import.meta.url), 'utf8');
   assert.match(mobileSource, /const statuses = \['draft', 'submitted', 'adjusted', 'accepted', 'paid', 'delivered', 'cancelled'\]/);

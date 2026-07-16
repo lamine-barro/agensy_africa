@@ -4,7 +4,6 @@ export const products = [
   ['attieke', 'Attiéké', 'sac de 10 kg', 10, 'kg', 1, 20, 350, 'attieke-v1.webp'],
   ['gari', 'Gari', 'sac de 25 kg', 25, 'kg', 1, 10, 600, 'gari-v1.webp'],
   ['cassava-flour', 'Farine de manioc', 'sac de 25 kg', 25, 'kg', 1, 10, 600, 'cassava-flour-v1.webp'],
-  ['maize', 'Maïs', 'sac de 50 kg', 50, 'kg', 1, 10, 250, 'maize-v1.webp'],
   ['peanut-paste', "Pâte d'arachide", 'seau de 5 kg', 5, 'kg', 1, 20, 1800, 'peanut-paste-v1.webp'],
   ['peanut-oil', "Huile d'arachide", 'bidon de 5 L', 5, 'L', 1, 20, 1800, 'peanut-oil-v1.webp'],
   ['roasted-peanuts', 'Arachides grillées', 'carton de 5 kg', 5, 'kg', 1, 20, 1800, 'roasted-peanuts-v1.webp'],
@@ -16,7 +15,7 @@ export const products = [
   ['chili-powder', 'Poudre de piment', 'sac de 5 kg', 5, 'kg', 1, 20, 3500, 'chili-powder-v1.webp'],
   ['dried-hibiscus', 'Bissap / hibiscus séché', 'sac de 25 kg', 25, 'kg', 1, 10, 2500, 'dried-hibiscus-v1.webp'],
   ['dried-ginger', 'Gingembre séché', 'sac de 25 kg', 25, 'kg', 1, 10, 3500, 'dried-ginger-v1.webp'],
-  ['cashew-nuts', 'Noix de cajou brutes', 'sac de 25 kg', 25, 'kg', 1, 10, 400, 'cashew-nuts-v1.webp'],
+  ['cashew-kernels', 'Noix de cajou décortiquées', 'sac de 25 kg', 25, 'kg', 1, 10, 400, 'cashew-nuts-v1.webp'],
   ['cocoa-beans', 'Fèves de cacao', 'sac de 65 kg', 65, 'kg', 1, 10, 1200, 'cocoa-beans-v1.webp'],
   ['shea-butter', 'Beurre de karité', 'seau de 25 kg', 25, 'kg', 1, 10, 3000, 'shea-butter-v1.webp']
 ].map(([id, name, unitLabel, unitContent, unit, minQuantity, maxQuantity, unitPrice, image]) => ({
