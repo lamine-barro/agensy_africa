@@ -15,7 +15,7 @@ const allowedOrigins = (process.env.CORS_ORIGINS || 'http://localhost:5173').spl
 
 app.disable('x-powered-by');
 app.use((req, res, next) => { res.set({ 'X-Content-Type-Options': 'nosniff', 'X-Frame-Options': 'DENY', 'Referrer-Policy': 'no-referrer', 'Cache-Control': 'no-store' }); next(); });
-app.use(cors({ origin(origin, callback) { if (!origin || allowedOrigins.includes(origin)) return callback(null, true); callback(new Error('Origin not allowed')); }, methods: ['GET', 'POST', 'PUT'], allowedHeaders: ['Authorization', 'Content-Type', 'X-Jeko-Signature'] }));
+app.use(cors({ origin(origin, callback) { if (!origin || allowedOrigins.includes(origin)) return callback(null, true); callback(new Error('Origin not allowed')); }, methods: ['GET', 'POST', 'PUT', 'DELETE'], allowedHeaders: ['Authorization', 'Content-Type', 'X-Jeko-Signature'] }));
 app.use(express.json({ limit: '100kb', verify: (req, _res, buffer) => { req.rawBody = buffer.toString('utf8'); } }));
 app.use(createRateLimiter());
 app.get('/assets/:filename', async (req, res, next) => { try { const image = await db.productImage(req.params.filename); if (!image) return next(); res.type(image.content_type).send(image.image_data); } catch (error) { next(error); } });
@@ -38,6 +38,8 @@ const validProfile = (profile, commerce) => {
   if (!commerce.businessTypes.includes(profile.businessType) || !commerce.legalStatuses.includes(profile.legalStatus) || !commerce.countries.includes(profile.country) || !validCoordinates(profile.mapLocation)) return false;
   return profile.country === 'CI' ? nonEmpty(profile.ncc) : nonEmpty(profile.internationalId) && nonEmpty(profile.billingCountry);
 };
+const validProduct = (product) => nonEmpty(product.name) && nonEmpty(product.unitLabel) && nonEmpty(product.unit) && nonEmpty(product.origin) && nonEmpty(product.regulation) && Number.isFinite(product.unitContent) && product.unitContent > 0 && Number.isInteger(product.minQuantity) && product.minQuantity > 0 && Number.isInteger(product.maxQuantity) && product.maxQuantity >= product.minQuantity && Number.isFinite(product.unitPrice) && product.unitPrice > 0;
+const normalizeProductInput = (input, id) => ({ id, name: String(input.name || '').trim(), unitLabel: String(input.unitLabel || '').trim(), unitContent: Number(input.unitContent), unit: String(input.unit || '').trim(), minQuantity: Number(input.minQuantity), maxQuantity: Number(input.maxQuantity), unitPrice: Number(input.unitPrice), origin: String(input.origin || '').trim(), regulation: String(input.regulation || '').trim(), monthlyPriceGuaranteed: input.monthlyPriceGuaranteed !== false, active: input.active !== false });
 const isProduction = process.env.NODE_ENV === 'production';
 const isDemoOtp = process.env.DEMO_OTP === 'true';
 const auth = (req, res, next) => { const payload = verifyToken(req.headers.authorization?.replace(/^Bearer\s+/i, '')); if (!payload) return res.status(401).json({ error: 'UNAUTHENTICATED' }); req.user = payload; next(); };
@@ -74,6 +76,15 @@ app.post('/v1/admin/auth/login', createRateLimiter({ windowMs: 10 * 60_000, limi
   if (!expectedUser || !expectedPassword || !safeEqual(username, expectedUser) || !safeEqual(password, expectedPassword)) return res.status(401).json({ error: 'INVALID_CREDENTIALS' });
   res.json({ accessToken: signToken({ sub: `operator_${expectedUser}`, role: 'operator' }, 60 * 60) });
 });
+
+app.get('/v1/admin/products', auth, role('operator', 'admin'), async (_req, res, next) => { try { res.json(await db.adminProducts()); } catch (error) { next(error); } });
+app.post('/v1/admin/products', auth, role('operator', 'admin'), async (req, res, next) => { try { const input = req.body || {}; const id = String(input.id || db.id('prd')).trim().toLowerCase().replace(/[^a-z0-9-]/g, '-'); const product = normalizeProductInput(input, id); if (!validProduct(product)) return res.status(422).json({ error: 'INVALID_PRODUCT' }); res.status(201).json(await db.saveProduct(product)); } catch (error) { next(error); } });
+app.put('/v1/admin/products/:id', auth, role('operator', 'admin'), async (req, res, next) => { try { const product = normalizeProductInput(req.body || {}, req.params.id); if (!validProduct(product)) return res.status(422).json({ error: 'INVALID_PRODUCT' }); res.json(await db.saveProduct(product)); } catch (error) { next(error); } });
+app.delete('/v1/admin/products/:id', auth, role('operator', 'admin'), async (req, res, next) => { try { if (!(await db.deleteProduct(req.params.id))) return res.status(404).json({ error: 'PRODUCT_NOT_FOUND' }); res.status(204).end(); } catch (error) { next(error); } });
+app.get('/v1/admin/customers', auth, role('operator', 'admin'), async (_req, res, next) => { try { res.json(await db.customers()); } catch (error) { next(error); } });
+app.put('/v1/admin/customers/:id', auth, role('operator', 'admin'), async (req, res, next) => { try { const existing = await db.customer(req.params.id); const config = await db.configuration(); const profile = { ...existing, ...(req.body || {}) }; if (!existing) return res.status(404).json({ error: 'CUSTOMER_NOT_FOUND' }); if (!config?.commerce || !validProfile(profile, config.commerce)) return res.status(422).json({ error: 'INCOMPLETE_PROFILE' }); res.json(await db.upsertCustomer({ ...profile, id: existing.id, phone: existing.phone, role: 'customer', profileCompleted: true })); } catch (error) { next(error); } });
+app.delete('/v1/admin/customers/:id', auth, role('operator', 'admin'), async (req, res, next) => { try { if (!(await db.deleteCustomer(req.params.id))) return res.status(409).json({ error: 'CUSTOMER_HAS_ORDERS_OR_NOT_FOUND' }); res.status(204).end(); } catch (error) { next(error); } });
+app.get('/v1/admin/invoices', auth, role('operator', 'admin'), async (_req, res, next) => { try { res.json(await db.adminInvoices()); } catch (error) { next(error); } });
 
 app.put('/v1/customers/:id/profile', auth, async (req, res, next) => { try {
   if (req.user.sub !== req.params.id && !['operator', 'admin'].includes(req.user.role)) return res.status(403).json({ error: 'FORBIDDEN' });

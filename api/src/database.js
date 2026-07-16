@@ -7,12 +7,22 @@ const memory = { orders: [], notifications: [], invoices: [], customers: new Map
 const useDatabase = Boolean(process.env.DATABASE_URL);
 const pool = useDatabase ? new Pool({ connectionString: process.env.DATABASE_URL, ssl: process.env.DATABASE_SSL === 'true' ? { rejectUnauthorized: process.env.DATABASE_SSL_REJECT_UNAUTHORIZED !== 'false' } : false }) : null;
 const id = (prefix) => `${prefix}_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 9)}`;
-const normalizeProduct = (row) => row && ({ id: row.id, name: row.name, unitLabel: row.unit_label, unitContent: Number(row.unit_content), unit: row.unit, minQuantity: row.min_quantity, maxQuantity: row.max_quantity, unitPrice: row.unit_price, image: `/assets/${row.filename}`, origin: row.origin, regulation: row.regulation, monthlyPriceGuaranteed: row.monthly_price_guaranteed });
+const normalizeProduct = (row) => row && ({ id: row.id, name: row.name, unitLabel: row.unit_label, unitContent: Number(row.unit_content), unit: row.unit, minQuantity: row.min_quantity, maxQuantity: row.max_quantity, unitPrice: Number(row.unit_price), image: row.filename ? `/assets/${row.filename}` : null, origin: row.origin, regulation: row.regulation, monthlyPriceGuaranteed: row.monthly_price_guaranteed, active: row.active });
 const normalizeOrder = (row) => row && ({ ...row, product: row.product, deliveryAddress: row.delivery_address, schedule: row.schedule, pricing: row.pricing, payment: row.payment, adjustment: row.adjustment, timeline: row.timeline || [], createdAt: row.created_at, updatedAt: row.updated_at, deliveryDate: row.delivery_date, validationExpiresAt: row.validation_expires_at, invoiceId: row.invoice_id });
 
 export const db = {
   async products(query = '') { if (!pool) return memory.products.filter((product) => product.name.toLowerCase().includes(query.toLowerCase())); const { rows } = await pool.query(`SELECT p.*, pv.unit_price, pi.filename FROM products p JOIN product_price_versions pv ON pv.product_id=p.id AND pv.effective_until IS NULL LEFT JOIN product_images pi ON pi.product_id=p.id WHERE p.active=true AND ($1='' OR lower(p.name) LIKE '%' || lower($1) || '%') ORDER BY p.name`, [query]); return rows.map(normalizeProduct); },
   async product(idValue) { if (!pool) return memory.products.find((product) => product.id === idValue) || null; const { rows } = await pool.query(`SELECT p.*, pv.unit_price, pi.filename FROM products p JOIN product_price_versions pv ON pv.product_id=p.id AND pv.effective_until IS NULL LEFT JOIN product_images pi ON pi.product_id=p.id WHERE p.id=$1 AND p.active=true`, [idValue]); return normalizeProduct(rows[0]); },
+  async adminProducts() { if (!pool) return memory.products; const { rows } = await pool.query(`SELECT p.*, pv.unit_price, pi.filename FROM products p JOIN product_price_versions pv ON pv.product_id=p.id AND pv.effective_until IS NULL LEFT JOIN product_images pi ON pi.product_id=p.id ORDER BY p.name`); return rows.map(normalizeProduct); },
+  async saveProduct(product) {
+    if (!pool) { const index = memory.products.findIndex((item) => item.id === product.id); if (index >= 0) memory.products[index] = { ...memory.products[index], ...product }; else memory.products.push(product); return product; }
+    await pool.query(`INSERT INTO products (id,name,unit_label,unit_content,unit,min_quantity,max_quantity,origin,regulation,monthly_price_guaranteed,active)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name,unit_label=EXCLUDED.unit_label,unit_content=EXCLUDED.unit_content,unit=EXCLUDED.unit,min_quantity=EXCLUDED.min_quantity,max_quantity=EXCLUDED.max_quantity,origin=EXCLUDED.origin,regulation=EXCLUDED.regulation,monthly_price_guaranteed=EXCLUDED.monthly_price_guaranteed,active=EXCLUDED.active,updated_at=now()`, [product.id, product.name, product.unitLabel, product.unitContent, product.unit, product.minQuantity, product.maxQuantity, product.origin, product.regulation, product.monthlyPriceGuaranteed, product.active]);
+    await pool.query('UPDATE product_price_versions SET effective_until=now() WHERE product_id=$1 AND effective_until IS NULL', [product.id]);
+    await pool.query('INSERT INTO product_price_versions (product_id,unit_price,currency) VALUES ($1,$2,$3)', [product.id, product.unitPrice, 'XOF']);
+    const { rows } = await pool.query(`SELECT p.*, pv.unit_price, pi.filename FROM products p JOIN product_price_versions pv ON pv.product_id=p.id AND pv.effective_until IS NULL LEFT JOIN product_images pi ON pi.product_id=p.id WHERE p.id=$1`, [product.id]); return normalizeProduct(rows[0]);
+  },
+  async deleteProduct(idValue) { if (!pool) { const index = memory.products.findIndex((product) => product.id === idValue); if (index < 0) return false; memory.products.splice(index, 1); return true; } const result = await pool.query('DELETE FROM products WHERE id=$1', [idValue]); return result.rowCount > 0; },
   async productImage(filename) { if (!pool) return null; const { rows } = await pool.query('SELECT content_type, image_data FROM product_images WHERE filename=$1 LIMIT 1', [filename]); return rows[0]; },
   async brandAsset(key) { if (!pool) return null; const { rows } = await pool.query('SELECT content_type, asset_data FROM brand_assets WHERE key=$1', [key]); return rows[0]; },
   async configuration() { if (!pool) return structuredClone(publicConfiguration); const { rows } = await pool.query("SELECT value FROM app_configuration WHERE key='public'"); return rows[0]?.value || null; },
@@ -21,6 +31,8 @@ export const db = {
     const { rows } = await pool.query('SELECT id, phone, role, profile, profile_completed FROM customers WHERE id = $1', [idValue]);
     return rows[0] && { ...rows[0], ...(rows[0].profile || {}), profileCompleted: rows[0].profile_completed };
   },
+  async customers() { if (!pool) return [...memory.customers.values()].filter((customer) => customer.role === 'customer'); const { rows } = await pool.query("SELECT id, phone, role, profile, profile_completed FROM customers WHERE role='customer' ORDER BY updated_at DESC"); return rows.map((row) => ({ ...row, ...(row.profile || {}), profileCompleted: row.profile_completed })); },
+  async deleteCustomer(idValue) { if (!pool) { if (memory.orders.some((order) => order.customerId === idValue)) return false; return memory.customers.delete(idValue); } const { rows } = await pool.query('SELECT 1 FROM orders WHERE customer_id=$1 LIMIT 1', [idValue]); if (rows.length) return false; const result = await pool.query("DELETE FROM customers WHERE id=$1 AND role='customer'", [idValue]); return result.rowCount > 0; },
   async upsertCustomer(customer) {
     if (!pool) { memory.customers.set(customer.id, customer); return customer; }
     const { id: customerId, phone, role = 'customer', profileCompleted = false, ...profile } = customer;
@@ -74,6 +86,7 @@ export const db = {
     if (!pool) return memory.invoices.filter((i) => !customerId || i.customerId === customerId);
     const { rows } = await pool.query('SELECT id, order_id AS "orderId", customer_id AS "customerId", amount, currency, status, invoice_number AS "invoiceNumber", pdf_url AS "pdfUrl", issued_at AS "issuedAt", whatsapp_shared_at AS "whatsAppSharedAt", created_at AS "createdAt" FROM invoices WHERE customer_id=$1 ORDER BY created_at DESC', [customerId]); return rows;
   },
+  async adminInvoices() { if (!pool) return memory.invoices; const { rows } = await pool.query('SELECT id, order_id AS "orderId", customer_id AS "customerId", amount, currency, status, invoice_number AS "invoiceNumber", pdf_url AS "pdfUrl", issued_at AS "issuedAt", whatsapp_shared_at AS "whatsAppSharedAt", created_at AS "createdAt" FROM invoices ORDER BY created_at DESC'); return rows; },
   async createInvoice(invoice) {
     if (!pool) { memory.invoices.unshift(invoice); return invoice; }
     await pool.query('INSERT INTO invoices (id,order_id,customer_id,amount,currency,status,created_at) VALUES ($1,$2,$3,$4,$5,$6,$7)', [invoice.id, invoice.orderId, invoice.customerId, invoice.amount, invoice.currency, invoice.status, invoice.createdAt]); return invoice;

@@ -1,0 +1,20 @@
+.hidden { display: none !important; }
+
+.sidebar nav button {
+  width: 100%;
+  min-height: 48px;
+  padding: 0 13px;
+  border: 0;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: transparent;
+  color: #cce1d1;
+  font-size: 16px;
+  font-weight: 700;
+  text-align: left;
+}
+
+.sidebar nav button.active { background: #28604c; color: #fff; }
+.sidebar nav button:focus-visible { outline: 3px solid #d9a287; outline-offset: 3px; }
