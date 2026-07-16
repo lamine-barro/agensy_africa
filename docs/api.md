@@ -2,7 +2,7 @@
 
 Base locale : `http://localhost:4000`. Les réponses sont JSON. Les routes privées attendent `Authorization: Bearer <accessToken>`.
 
-En développement, `ALLOW_DEMO_OTP=true` ajoute le code OTP à la réponse de demande. Cette option est refusée en production.
+Avec `DEMO_OTP=true`, tout utilisateur se connecte avec le code fixe `0000`. Aucun OTP, message WhatsApp ou appel UltraMsg n'est envoyé dans ce mode ; il doit être désactivé avant la mise en production réelle.
 
 ## Routes publiques
 

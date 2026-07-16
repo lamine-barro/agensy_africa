@@ -15,7 +15,7 @@ Les variables documentées dans `.env.example` sont la référence locale.
 | `WHATSAPP_WEBHOOK_URL` | OTP et notifications WhatsApp |
 | `FNE_API_URL`, `FNE_API_TOKEN` | Futur raccordement FNE ; non utilisé par la facturation manuelle |
 | `EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN` | Jeton Mapbox public pour le mobile |
-| `ALLOW_DEMO_OTP` | Développement local uniquement ; interdit en production |
+| `DEMO_OTP` | Mode démo : OTP fixe `0000` et aucun envoi WhatsApp/UltraMsg ; désactiver avant production |
 
 ## Lancement local
 

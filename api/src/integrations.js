@@ -9,12 +9,14 @@ export const integrations = {
     return { status: 'queued', invoice };
   },
   async notifyWhatsApp(message) {
+    if (process.env.DEMO_OTP === 'true') return { status: 'skipped_demo' };
     if (!process.env.WHATSAPP_WEBHOOK_URL) return { status: 'not_configured' };
     const response = await fetch(process.env.WHATSAPP_WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(message) });
     if (!response.ok) throw new Error(`WhatsApp gateway failed with ${response.status}`);
     return { status: 'queued' };
   },
   async sendOtp({ phone, code }) {
+    if (process.env.DEMO_OTP === 'true') return { status: 'skipped_demo' };
     if (!process.env.WHATSAPP_WEBHOOK_URL) throw new Error('WHATSAPP_WEBHOOK_URL is required to send OTPs');
     const response = await fetch(process.env.WHATSAPP_WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ event: 'otp', phone, code }) });
     if (!response.ok) throw new Error(`WhatsApp gateway failed with ${response.status}`);

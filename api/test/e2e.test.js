@@ -4,7 +4,7 @@ import crypto from 'node:crypto';
 import fs from 'node:fs/promises';
 
 process.env.NODE_ENV = 'test';
-process.env.ALLOW_DEMO_OTP = 'true';
+process.env.DEMO_OTP = 'true';
 process.env.JWT_SECRET = 'a-local-test-secret-with-more-than-thirty-two-characters';
 process.env.ADMIN_USERNAME = 'operator';
 process.env.ADMIN_PASSWORD = 'strong-local-password';
@@ -26,7 +26,8 @@ test('mobile profile, order, payment, invoice and delivery flow is coherent', as
   t.after(() => server.close());
   const otpRequest = await request('/v1/auth/request-otp', { method: 'POST', body: JSON.stringify({ phone: '+2250700000000' }) });
   assert.equal(otpRequest.response.status, 202);
-  assert.match(otpRequest.body.demoCode, /^\d{4}$/);
+  assert.equal(otpRequest.body.delivery, 'demo');
+  assert.equal(otpRequest.body.demoCode, '0000');
 
   const verified = await request('/v1/auth/verify-otp', { method: 'POST', body: JSON.stringify({ phone: '+2250700000000', code: otpRequest.body.demoCode }) });
   assert.equal(verified.response.status, 200);

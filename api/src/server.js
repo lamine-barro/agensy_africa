@@ -39,6 +39,7 @@ const validProfile = (profile, commerce) => {
   return profile.country === 'CI' ? nonEmpty(profile.ncc) : nonEmpty(profile.internationalId) && nonEmpty(profile.billingCountry);
 };
 const isProduction = process.env.NODE_ENV === 'production';
+const isDemoOtp = process.env.DEMO_OTP === 'true';
 const auth = (req, res, next) => { const payload = verifyToken(req.headers.authorization?.replace(/^Bearer\s+/i, '')); if (!payload) return res.status(401).json({ error: 'UNAUTHENTICATED' }); req.user = payload; next(); };
 const role = (...roles) => (req, res, next) => roles.includes(req.user?.role) ? next() : res.status(403).json({ error: 'FORBIDDEN' });
 const ownership = (order, user) => ['operator', 'admin'].includes(user.role) || order.customerId === user.sub;
@@ -53,9 +54,9 @@ app.post('/v1/auth/request-otp', createRateLimiter({ windowMs: 10 * 60_000, limi
   try {
     const phone = String(req.body.phone || '').replace(/\s/g, '');
     if (!/^\+?[0-9]{8,16}$/.test(phone)) return res.status(422).json({ error: 'PHONE_REQUIRED' });
-    const code = secureCode(); await db.saveOtp(phone, hashOtp(phone, code));
-    if (isProduction) await integrations.sendOtp({ phone, code });
-    res.status(202).json({ delivery: isProduction ? 'whatsapp' : 'development', expiresInSeconds: 300, ...(!isProduction && process.env.ALLOW_DEMO_OTP === 'true' ? { demoCode: code } : {}) });
+    const code = isDemoOtp ? '0000' : secureCode(); await db.saveOtp(phone, hashOtp(phone, code));
+    if (isProduction && !isDemoOtp) await integrations.sendOtp({ phone, code });
+    res.status(202).json({ delivery: isDemoOtp ? 'demo' : isProduction ? 'whatsapp' : 'development', expiresInSeconds: 300, ...(isDemoOtp ? { demoCode: '0000' } : {}) });
   } catch (error) { next(error); }
 });
 app.post('/v1/auth/verify-otp', createRateLimiter({ windowMs: 10 * 60_000, limit: 10 }), async (req, res, next) => {

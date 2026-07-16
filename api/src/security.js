@@ -9,7 +9,6 @@ export function assertProductionConfiguration() {
   const missing = required.filter((key) => !process.env[key]);
   if (missing.length) throw new Error(`Missing required production configuration: ${missing.join(', ')}`);
   if (process.env.JWT_SECRET.length < 32) throw new Error('JWT_SECRET must contain at least 32 characters');
-  if (process.env.ALLOW_DEMO_OTP === 'true') throw new Error('ALLOW_DEMO_OTP must be disabled in production');
 }
 
 export function signToken(payload, ttlSeconds = 60 * 60 * 8) {
