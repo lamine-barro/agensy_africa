@@ -1,0 +1,12 @@
+{
+  "name": "agensy-africa",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": ["api", "web", "mobile"],
+  "scripts": {
+    "dev:api": "npm --workspace api run dev",
+    "dev:web": "npm --workspace web run dev",
+    "dev:mobile": "npm --workspace mobile run start",
+    "test": "npm --workspace api test"
+  }
+}

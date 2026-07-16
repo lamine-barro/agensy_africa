@@ -1,0 +1,16 @@
+{
+  "name": "@agensy/api",
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "node --env-file-if-exists=.env --watch src/server.js",
+    "start": "node --env-file-if-exists=.env src/server.js",
+    "test": "node --test",
+    "migrate": "psql \"$DATABASE_URL\" -f migrations/001_initial.sql"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
+    "pg": "^8.22.0"
+  }
+}
