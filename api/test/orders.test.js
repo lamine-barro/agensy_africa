@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { products } from '../src/catalog.js';
+import { products } from '../seed-data/catalog.js';
 
 test('catalogue has every specified launch product', () => assert.equal(products.length, 28));
 test('every product has valid order bounds and pricing', () => products.forEach((p) => {

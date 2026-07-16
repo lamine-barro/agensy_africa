@@ -2,12 +2,12 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import pg from 'pg';
-import { products } from './catalog.js';
+import { products } from '../seed-data/catalog.js';
 
 if (!process.env.DATABASE_URL) throw new Error('DATABASE_URL is required to seed the catalogue');
 const { Pool } = pg; const pool = new Pool({ connectionString: process.env.DATABASE_URL, ssl: process.env.DATABASE_SSL === 'true' ? { rejectUnauthorized: process.env.DATABASE_SSL_REJECT_UNAUTHORIZED !== 'false' } : false });
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const productDir = path.resolve(__dirname, '../../products');
+const productDir = path.resolve(__dirname, '../seed-data/products');
 
 try {
   await pool.query('BEGIN');

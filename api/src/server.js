@@ -19,7 +19,6 @@ app.use(cors({ origin(origin, callback) { if (!origin || allowedOrigins.includes
 app.use(express.json({ limit: '100kb', verify: (req, _res, buffer) => { req.rawBody = buffer.toString('utf8'); } }));
 app.use(createRateLimiter());
 app.get('/assets/:filename', async (req, res, next) => { try { const image = await db.productImage(req.params.filename); if (!image) return next(); res.type(image.content_type).send(image.image_data); } catch (error) { next(error); } });
-app.use('/assets', express.static(path.resolve(__dirname, '../../products'), { maxAge: '7d', etag: true }));
 app.use(express.static(path.resolve(__dirname, '../../web/dist'), { index: 'index.html', maxAge: '1h', etag: true }));
 
 const calculate = (product, quantity, deliveryFee = 0) => { const productSubtotal = product.unitPrice * product.unitContent * quantity; return { productSubtotal, deliveryFee, serviceFee: 2000, taxes: 0, total: productSubtotal + deliveryFee + 2000 }; };

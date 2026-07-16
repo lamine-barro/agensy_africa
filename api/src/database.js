@@ -1,8 +1,7 @@
 import pg from 'pg';
-import { products } from './catalog.js';
 
 const { Pool } = pg;
-const memory = { products, orders: [], notifications: [], invoices: [], customers: new Map(), otp: new Map() };
+const memory = { orders: [], notifications: [], invoices: [], customers: new Map(), otp: new Map() };
 const useDatabase = Boolean(process.env.DATABASE_URL);
 const pool = useDatabase ? new Pool({ connectionString: process.env.DATABASE_URL, ssl: process.env.DATABASE_SSL === 'true' ? { rejectUnauthorized: process.env.DATABASE_SSL_REJECT_UNAUTHORIZED !== 'false' } : false }) : null;
 const id = (prefix) => `${prefix}_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 9)}`;
@@ -10,8 +9,8 @@ const normalizeProduct = (row) => row && ({ id: row.id, name: row.name, unitLabe
 const normalizeOrder = (row) => row && ({ ...row, product: row.product, deliveryAddress: row.delivery_address, schedule: row.schedule, pricing: row.pricing, payment: row.payment, adjustment: row.adjustment, timeline: row.timeline || [], createdAt: row.created_at, updatedAt: row.updated_at, deliveryDate: row.delivery_date, validationExpiresAt: row.validation_expires_at, invoiceId: row.invoice_id });
 
 export const db = {
-  async products(query = '') { if (!pool) return products.filter((p) => !query || p.name.toLowerCase().includes(query.toLowerCase())); const { rows } = await pool.query(`SELECT p.*, pv.unit_price, pi.filename FROM products p JOIN product_price_versions pv ON pv.product_id=p.id AND pv.effective_until IS NULL LEFT JOIN product_images pi ON pi.product_id=p.id WHERE p.active=true AND ($1='' OR lower(p.name) LIKE '%' || lower($1) || '%') ORDER BY p.name`, [query]); return rows.map(normalizeProduct); },
-  async product(idValue) { if (!pool) return products.find((p) => p.id === idValue); const { rows } = await pool.query(`SELECT p.*, pv.unit_price, pi.filename FROM products p JOIN product_price_versions pv ON pv.product_id=p.id AND pv.effective_until IS NULL LEFT JOIN product_images pi ON pi.product_id=p.id WHERE p.id=$1 AND p.active=true`, [idValue]); return normalizeProduct(rows[0]); },
+  async products(query = '') { if (!pool) return []; const { rows } = await pool.query(`SELECT p.*, pv.unit_price, pi.filename FROM products p JOIN product_price_versions pv ON pv.product_id=p.id AND pv.effective_until IS NULL LEFT JOIN product_images pi ON pi.product_id=p.id WHERE p.active=true AND ($1='' OR lower(p.name) LIKE '%' || lower($1) || '%') ORDER BY p.name`, [query]); return rows.map(normalizeProduct); },
+  async product(idValue) { if (!pool) return null; const { rows } = await pool.query(`SELECT p.*, pv.unit_price, pi.filename FROM products p JOIN product_price_versions pv ON pv.product_id=p.id AND pv.effective_until IS NULL LEFT JOIN product_images pi ON pi.product_id=p.id WHERE p.id=$1 AND p.active=true`, [idValue]); return normalizeProduct(rows[0]); },
   async productImage(filename) { if (!pool) return null; const { rows } = await pool.query('SELECT content_type, image_data FROM product_images WHERE filename=$1 LIMIT 1', [filename]); return rows[0]; },
   async customer(idValue) {
     if (!pool) return memory.customers.get(idValue);

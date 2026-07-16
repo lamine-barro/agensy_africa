@@ -7,7 +7,6 @@ COPY mobile/package.json mobile/package.json
 RUN npm ci
 COPY api api
 COPY web web
-COPY products products
 RUN npm run --workspace web build
 
 FROM node:24-alpine
