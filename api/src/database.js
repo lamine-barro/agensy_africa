@@ -4,7 +4,7 @@ import { products } from './catalog.js';
 const { Pool } = pg;
 const memory = { products, orders: [], notifications: [], invoices: [], customers: new Map(), otp: new Map() };
 const useDatabase = Boolean(process.env.DATABASE_URL);
-const pool = useDatabase ? new Pool({ connectionString: process.env.DATABASE_URL, ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: true } : undefined }) : null;
+const pool = useDatabase ? new Pool({ connectionString: process.env.DATABASE_URL, ssl: process.env.DATABASE_SSL === 'true' ? { rejectUnauthorized: process.env.DATABASE_SSL_REJECT_UNAUTHORIZED !== 'false' } : false }) : null;
 const id = (prefix) => `${prefix}_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 9)}`;
 const normalizeProduct = (row) => row && ({ id: row.id, name: row.name, unitLabel: row.unit_label, unitContent: Number(row.unit_content), unit: row.unit, minQuantity: row.min_quantity, maxQuantity: row.max_quantity, unitPrice: row.unit_price, image: `/assets/${row.filename}`, origin: row.origin, regulation: row.regulation, monthlyPriceGuaranteed: row.monthly_price_guaranteed });
 const normalizeOrder = (row) => row && ({ ...row, product: row.product, deliveryAddress: row.delivery_address, schedule: row.schedule, pricing: row.pricing, payment: row.payment, adjustment: row.adjustment, timeline: row.timeline || [], createdAt: row.created_at, updatedAt: row.updated_at, deliveryDate: row.delivery_date, validationExpiresAt: row.validation_expires_at, invoiceId: row.invoice_id });
