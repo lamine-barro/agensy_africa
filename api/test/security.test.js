@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import crypto from 'node:crypto';
-import { hashOtp, signToken, verifyToken, verifyWebhookSignature } from '../src/security.js';
+import { hashOtp, secureCode, signToken, verifyToken, verifyWebhookSignature } from '../src/security.js';
 
 process.env.JWT_SECRET = 'a-local-test-secret-with-more-than-thirty-two-characters';
 
@@ -15,6 +15,8 @@ test('OTP hashes are specific to both phone and code', () => {
   assert.notEqual(hashOtp('+2250700000000', '123456'), hashOtp('+2250700000001', '123456'));
   assert.notEqual(hashOtp('+2250700000000', '123456'), hashOtp('+2250700000000', '123457'));
 });
+
+test('OTP codes contain exactly four digits', () => assert.match(secureCode(), /^\d{4}$/));
 
 test('Jeko webhook signatures use the configured HMAC secret', () => {
   process.env.JEKO_WEBHOOK_SECRET = 'webhook-secret';

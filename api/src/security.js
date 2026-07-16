@@ -30,7 +30,7 @@ export function verifyToken(token) {
 }
 
 export const hashOtp = (phone, code) => crypto.createHash('sha256').update(`${phone}:${code}`).digest('hex');
-export const secureCode = () => crypto.randomInt(100000, 1000000).toString();
+export const secureCode = () => crypto.randomInt(1000, 10000).toString();
 
 export function verifyWebhookSignature(rawBody, signature) {
   const secret = process.env.JEKO_WEBHOOK_SECRET;
