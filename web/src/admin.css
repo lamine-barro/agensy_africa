@@ -38,3 +38,30 @@
   object-fit: cover;
   background: #eef5ef;
 }
+
+.catalogManager .panelTitle { display: none; }
+.dashboard:has(.catalogManager) .pageHeader { display: none; }
+.dashboard:has(.catalogManager) { padding-top: 34px; }
+.catalogManager { border: 0; background: transparent; padding: 0; }
+.catalogManager table { margin-top: 0; }
+.catalogManager tr { background: #fff; }
+.catalogManager td:first-child { border-radius: 16px 0 0 16px; }
+.catalogManager td:last-child { border-radius: 0 16px 16px 0; }
+.catalogManager tbody tr + tr td { border-top: 12px solid #f7f8f5; }
+
+.productDetails {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #284b3b;
+  text-align: left;
+  line-height: 1.45;
+}
+
+.productDetails:hover b, .productDetails:hover { color: #185c40; text-decoration: underline; }
+.productDetails:focus-visible { outline: 3px solid #d9a287; outline-offset: 4px; border-radius: 4px; }
+.productImagePlaceholder { width: 58px; height: 58px; flex: 0 0 58px; border-radius: 12px; background: #eef5ef; }
+.rowActions .iconButton { width: 40px; min-height: 40px; padding: 0; }
+.rowActions .iconButton svg { width: 18px; height: 18px; }
