@@ -6,11 +6,13 @@ const memory = { products, orders: [], notifications: [], invoices: [], customer
 const useDatabase = Boolean(process.env.DATABASE_URL);
 const pool = useDatabase ? new Pool({ connectionString: process.env.DATABASE_URL, ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: true } : undefined }) : null;
 const id = (prefix) => `${prefix}_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 9)}`;
-const normalizeOrder = (row) => row && ({ ...row, product: row.product, deliveryAddress: row.delivery_address, schedule: row.schedule, pricing: row.pricing, payment: row.payment, timeline: row.timeline || [], createdAt: row.created_at, updatedAt: row.updated_at, deliveryDate: row.delivery_date, invoiceId: row.invoice_id });
+const normalizeProduct = (row) => row && ({ id: row.id, name: row.name, unitLabel: row.unit_label, unitContent: Number(row.unit_content), unit: row.unit, minQuantity: row.min_quantity, maxQuantity: row.max_quantity, unitPrice: row.unit_price, image: `/assets/${row.filename}`, origin: row.origin, regulation: row.regulation, monthlyPriceGuaranteed: row.monthly_price_guaranteed });
+const normalizeOrder = (row) => row && ({ ...row, product: row.product, deliveryAddress: row.delivery_address, schedule: row.schedule, pricing: row.pricing, payment: row.payment, adjustment: row.adjustment, timeline: row.timeline || [], createdAt: row.created_at, updatedAt: row.updated_at, deliveryDate: row.delivery_date, validationExpiresAt: row.validation_expires_at, invoiceId: row.invoice_id });
 
 export const db = {
-  async products(query = '') { return products.filter((p) => !query || p.name.toLowerCase().includes(query.toLowerCase())); },
-  async product(idValue) { return products.find((p) => p.id === idValue); },
+  async products(query = '') { if (!pool) return products.filter((p) => !query || p.name.toLowerCase().includes(query.toLowerCase())); const { rows } = await pool.query(`SELECT p.*, pv.unit_price, pi.filename FROM products p JOIN product_price_versions pv ON pv.product_id=p.id AND pv.effective_until IS NULL LEFT JOIN product_images pi ON pi.product_id=p.id WHERE p.active=true AND ($1='' OR lower(p.name) LIKE '%' || lower($1) || '%') ORDER BY p.name`, [query]); return rows.map(normalizeProduct); },
+  async product(idValue) { if (!pool) return products.find((p) => p.id === idValue); const { rows } = await pool.query(`SELECT p.*, pv.unit_price, pi.filename FROM products p JOIN product_price_versions pv ON pv.product_id=p.id AND pv.effective_until IS NULL LEFT JOIN product_images pi ON pi.product_id=p.id WHERE p.id=$1 AND p.active=true`, [idValue]); return normalizeProduct(rows[0]); },
+  async productImage(filename) { if (!pool) return null; const { rows } = await pool.query('SELECT content_type, image_data FROM product_images WHERE filename=$1 LIMIT 1', [filename]); return rows[0]; },
   async customer(idValue) {
     if (!pool) return memory.customers.get(idValue);
     const { rows } = await pool.query('SELECT id, phone, role, profile, profile_completed FROM customers WHERE id = $1', [idValue]);
@@ -53,7 +55,7 @@ export const db = {
   },
   async updateOrder(order) {
     if (!pool) { const i = memory.orders.findIndex((o) => o.id === order.id); memory.orders[i] = order; return order; }
-    const { rows } = await pool.query(`UPDATE orders SET status=$2, pricing=$3, payment=$4, timeline=$5, delivery_date=$6, invoice_id=$7, updated_at=$8 WHERE id=$1 RETURNING *`, [order.id, order.status, order.pricing, order.payment || null, order.timeline, order.deliveryDate || null, order.invoiceId || null, order.updatedAt]);
+    const { rows } = await pool.query(`UPDATE orders SET status=$2, pricing=$3, payment=$4, timeline=$5, delivery_date=$6, invoice_id=$7, updated_at=$8, validation_expires_at=$9, adjustment=$10 WHERE id=$1 RETURNING *`, [order.id, order.status, order.pricing, order.payment || null, order.timeline, order.deliveryDate || null, order.invoiceId || null, order.updatedAt, order.validationExpiresAt || null, order.adjustment || null]);
     return normalizeOrder(rows[0]);
   },
   async notifications(customerId) {
